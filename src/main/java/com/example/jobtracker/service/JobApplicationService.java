@@ -1,5 +1,7 @@
 package com.example.jobtracker.service;
 
+import com.example.jobtracker.dto.request.JobApplicationRequestDTO;
+import com.example.jobtracker.dto.response.JobApplicationResponseDTO;
 import com.example.jobtracker.entity.ApplicationStatus;
 import com.example.jobtracker.entity.JobApplication;
 import org.springframework.data.domain.Page;
@@ -8,19 +10,20 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface JobApplicationService {
-    JobApplication createJobApplication(JobApplication jobApplication);
+    JobApplicationResponseDTO createJobApplication(JobApplicationRequestDTO requestDTO);
 
-    JobApplication getApplicationById(Long id);
+    JobApplicationResponseDTO getApplicationById(Long id);
 
-    Page<JobApplication> getAllJobApplication(int page, int size, String sortBy, String sortDir);
+    List<JobApplicationResponseDTO> getAllJobApplication();
+//    Page<JobApplicationResponseDTO> getAllJobApplication(int page, int size, String sortBy, String sortDir);
 
-    JobApplication updateJobApplication(Long id, JobApplication jobApplication);
+    JobApplicationResponseDTO updateJobApplication(Long id, JobApplicationRequestDTO requestDTO);
 
     void deleteJobApplication(Long id);
 
-    List<JobApplication> getJobApplicationByStatus(ApplicationStatus status);
+    List<JobApplicationResponseDTO> getJobApplicationByStatus(ApplicationStatus status);
 
-    List<JobApplication> getJobApplicationByDateRange(LocalDateTime start, LocalDateTime end);
+    List<JobApplicationResponseDTO> getJobApplicationByDateRange(LocalDateTime start, LocalDateTime end);
 
     long countByStatus(ApplicationStatus status);
 

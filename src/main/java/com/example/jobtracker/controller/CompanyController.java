@@ -4,6 +4,7 @@ import com.example.jobtracker.dto.request.CompanyRequestDTO;
 import com.example.jobtracker.dto.response.CompanyResponseDTO;
 import com.example.jobtracker.service.CompanyService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,7 +33,7 @@ public class CompanyController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CompanyResponseDTO> getCompanyById(@Valid @PathVariable Long id){
+    public ResponseEntity<CompanyResponseDTO> getCompanyById(@PathVariable Long id){
         return ResponseEntity.ok(companyService.getCompanyById(id));
     }
 

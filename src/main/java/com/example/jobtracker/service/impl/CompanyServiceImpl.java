@@ -3,6 +3,7 @@ package com.example.jobtracker.service.impl;
 import com.example.jobtracker.dto.request.CompanyRequestDTO;
 import com.example.jobtracker.dto.response.CompanyResponseDTO;
 import com.example.jobtracker.entity.Company;
+import com.example.jobtracker.exception.DuplicateResourceException;
 import com.example.jobtracker.exception.ResourceNotFoundException;
 import com.example.jobtracker.repository.CompanyRepository;
 import com.example.jobtracker.service.CompanyService;
@@ -25,6 +26,9 @@ public class CompanyServiceImpl implements CompanyService {
 
     @Override
     public CompanyResponseDTO createCompany(CompanyRequestDTO requestDTO){
+        if(companyRepository.existsByName(requestDTO.getName())){
+            throw new DuplicateResourceException("Company already exists with name " + requestDTO.getName());
+        }
         Company company = modelMapper.map(requestDTO, Company.class);
         Company savedCompany = companyRepository.save(company);
 
@@ -60,6 +64,8 @@ public class CompanyServiceImpl implements CompanyService {
 
     @Override
     public void deleteCompany(Long id){
-        companyRepository.deleteById(id);
+        Company company = companyRepository.findById(id).orElseThrow(()->
+                new ResourceNotFoundException("Company not found with id"+ id));
+        companyRepository.delete(company);
     }
 }

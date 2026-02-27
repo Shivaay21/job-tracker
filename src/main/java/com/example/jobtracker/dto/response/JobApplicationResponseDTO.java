@@ -18,4 +18,8 @@ public class JobApplicationResponseDTO {
     private LocalDateTime interviewDate;
 
     private String notes;
+
+    private Long companyId;
+
+    private String companyName;
 }

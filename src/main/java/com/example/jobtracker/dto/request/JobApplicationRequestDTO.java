@@ -24,4 +24,6 @@ public class JobApplicationRequestDTO {
     @NotBlank(message = "Notes is required")
     private String notes;
 
+    @NotNull(message = "Company ID is required")
+    private Long companyId;
 }
