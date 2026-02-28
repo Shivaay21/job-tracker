@@ -1,10 +1,11 @@
 package com.example.jobtracker.controller;
 
+import com.example.jobtracker.dto.PagedResponseDTO;
 import com.example.jobtracker.dto.request.JobApplicationRequestDTO;
+import com.example.jobtracker.dto.response.ApplicationStatisticsResponseDTO;
 import com.example.jobtracker.dto.response.JobApplicationResponseDTO;
 import com.example.jobtracker.entity.ApplicationStatus;
 import com.example.jobtracker.service.JobApplicationService;
-import com.example.jobtracker.service.impl.JobApplicationServiceImpl;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,9 +30,14 @@ public class JobApplicationController {
     }
 
     @GetMapping
-    public ResponseEntity<List<JobApplicationResponseDTO>> getAllJobApplication(){
-        List<JobApplicationResponseDTO> jobs = jobApplicationService.getAllJobApplication();
-        return ResponseEntity.ok(jobs);
+    public ResponseEntity<PagedResponseDTO<JobApplicationResponseDTO>> getAllJobApplication(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "roleTitle") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir){
+
+        PagedResponseDTO<JobApplicationResponseDTO> jobPage = jobApplicationService.getAllJobApplication(page, size, sortBy, sortDir);
+        return ResponseEntity.ok(jobPage);
     }
 
     @GetMapping("/{id}")
@@ -72,5 +78,11 @@ public class JobApplicationController {
     public ResponseEntity<Long> countByStatus(@PathVariable ApplicationStatus status){
         long count = jobApplicationService.countByStatus(status);
         return ResponseEntity.ok(count);
+    }
+
+    @GetMapping("/statistics/summary")
+    public ResponseEntity<ApplicationStatisticsResponseDTO> getApplicationStatistics() {
+        ApplicationStatisticsResponseDTO stats = jobApplicationService.getApplicationStatistics();
+        return ResponseEntity.ok(stats);
     }
 }

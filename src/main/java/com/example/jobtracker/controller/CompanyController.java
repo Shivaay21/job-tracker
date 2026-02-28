@@ -1,15 +1,14 @@
 package com.example.jobtracker.controller;
 
+import com.example.jobtracker.dto.PagedResponseDTO;
 import com.example.jobtracker.dto.request.CompanyRequestDTO;
 import com.example.jobtracker.dto.response.CompanyResponseDTO;
 import com.example.jobtracker.service.CompanyService;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/companies")
@@ -27,14 +26,31 @@ public class CompanyController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CompanyResponseDTO>> getAllCompanies(){
-        List<CompanyResponseDTO> companies = companyService.getAllCompanies();
-        return ResponseEntity.ok(companies);
+    public ResponseEntity<PagedResponseDTO<CompanyResponseDTO>> getAllCompanies(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "roleTitle") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir
+    ){
+        PagedResponseDTO<CompanyResponseDTO> companyPage = companyService.getAllCompanies(page, size, sortBy, sortDir);
+        return ResponseEntity.ok(companyPage);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<CompanyResponseDTO> getCompanyById(@PathVariable Long id){
         return ResponseEntity.ok(companyService.getCompanyById(id));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<PagedResponseDTO<CompanyResponseDTO>> searchCompanies(
+            @RequestParam String name,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir
+    ){
+        PagedResponseDTO<CompanyResponseDTO> companies = companyService.searchCompaniesByName(name, page,size,sortBy,sortDir);
+        return ResponseEntity.ok(companies);
     }
 
     @PutMapping("/{id}")

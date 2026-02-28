@@ -1,5 +1,6 @@
 package com.example.jobtracker.service.impl;
 
+import com.example.jobtracker.dto.PagedResponseDTO;
 import com.example.jobtracker.dto.request.CompanyRequestDTO;
 import com.example.jobtracker.dto.response.CompanyResponseDTO;
 import com.example.jobtracker.entity.Company;
@@ -9,9 +10,14 @@ import com.example.jobtracker.repository.CompanyRepository;
 import com.example.jobtracker.service.CompanyService;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -36,11 +42,26 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public List<CompanyResponseDTO> getAllCompanies(){
-        List<Company> companies = companyRepository.findAll();
-        return companies.stream().map(company ->
-                        modelMapper.map(company, CompanyResponseDTO.class))
-                        .toList();
+    public PagedResponseDTO<CompanyResponseDTO> getAllCompanies(int page, int size, String sortBy, String sortDir){
+        Sort sort = sortDir.equalsIgnoreCase("desc")?
+                Sort.by(sortBy).descending():
+                Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Company> companyPage = companyRepository.findAll(pageable);
+        List<CompanyResponseDTO> content = companyPage.stream().map(company ->
+                modelMapper.map(company, CompanyResponseDTO.class)).collect(Collectors.toList());
+
+        return new PagedResponseDTO<>(
+                content,
+                companyPage.getNumber(),
+                companyPage.getSize(),
+                companyPage.getTotalElements(),
+                companyPage.getTotalPages(),
+                companyPage.isLast(),
+                companyPage.hasNext(),
+                companyPage.hasPrevious()
+                );
     }
 
     @Override
@@ -67,5 +88,35 @@ public class CompanyServiceImpl implements CompanyService {
         Company company = companyRepository.findById(id).orElseThrow(()->
                 new ResourceNotFoundException("Company not found with id"+ id));
         companyRepository.delete(company);
+    }
+
+    @Override
+    public PagedResponseDTO<CompanyResponseDTO> searchCompaniesByName(
+            String name,
+            int page,
+            int size,
+            String sortBy,
+            String sortDir){
+        Sort sort = sortBy.equalsIgnoreCase("desc")?
+                Sort.by(sortBy).descending():
+                Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Company> companyPage = companyRepository.findByNameContainingIgnoreCase(name,pageable);
+        List<CompanyResponseDTO> content = companyPage.
+                stream().map(company ->
+                        modelMapper.map(company, CompanyResponseDTO.class))
+                .collect(Collectors.toList());
+
+        return new PagedResponseDTO<>(
+                content,
+                companyPage.getNumber(),
+                companyPage.getSize(),
+                companyPage.getTotalElements(),
+                companyPage.getTotalPages(),
+                companyPage.isLast(),
+                companyPage.hasNext(),
+                companyPage.hasPrevious()
+        );
     }
 }

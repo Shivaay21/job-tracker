@@ -1,6 +1,8 @@
 package com.example.jobtracker.service.impl;
 
+import com.example.jobtracker.dto.PagedResponseDTO;
 import com.example.jobtracker.dto.request.JobApplicationRequestDTO;
+import com.example.jobtracker.dto.response.ApplicationStatisticsResponseDTO;
 import com.example.jobtracker.dto.response.JobApplicationResponseDTO;
 import com.example.jobtracker.entity.ApplicationStatus;
 import com.example.jobtracker.entity.Company;
@@ -10,10 +12,15 @@ import com.example.jobtracker.repository.CompanyRepository;
 import com.example.jobtracker.repository.JobApplicationRepository;
 import com.example.jobtracker.service.JobApplicationService;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class JobApplicationServiceImpl implements JobApplicationService {
@@ -58,11 +65,26 @@ public class JobApplicationServiceImpl implements JobApplicationService {
 
 
     @Override
-    public List<JobApplicationResponseDTO> getAllJobApplication() {
-        List<JobApplication> job = jobApplicationRepository.findAll();
-        return job.stream().map(jobApplication ->
-                        modelMapper.map(jobApplication, JobApplicationResponseDTO.class))
-                        .toList();
+    public PagedResponseDTO<JobApplicationResponseDTO> getAllJobApplication(int page, int size, String sortBy, String sortDir) {
+        Sort sort = sortBy.equalsIgnoreCase("desc")?
+                Sort.by(sortBy).descending():
+                Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<JobApplication> jobPage = jobApplicationRepository.findAll(pageable);
+        List<JobApplicationResponseDTO> content = jobPage.stream().map(jobApplication ->
+                modelMapper.map(jobApplication, JobApplicationResponseDTO.class)).collect(Collectors.toList());
+
+        return new PagedResponseDTO<>(
+                content,
+                jobPage.getNumber(),
+                jobPage.getSize(),
+                jobPage.getTotalElements(),
+                jobPage.getTotalPages(),
+                jobPage.isLast(),
+                jobPage.hasNext(),
+                jobPage.hasPrevious()
+        );
     }
 
     @Override
@@ -109,5 +131,24 @@ public class JobApplicationServiceImpl implements JobApplicationService {
     @Override
     public long countByStatus(ApplicationStatus status) {
         return jobApplicationRepository.countByStatus(status);
+    }
+
+    @Override
+    public ApplicationStatisticsResponseDTO getApplicationStatistics(){
+        long totalApplied = jobApplicationRepository.count();
+        long totalRejected = jobApplicationRepository.countByStatus(ApplicationStatus.REJECTED);
+        long totalInterviews = jobApplicationRepository.countByStatus(ApplicationStatus.INTERVIEW);
+        long totalSelected = jobApplicationRepository.countByStatus(ApplicationStatus.SELECTED);
+
+        double successRate = totalApplied > 0 ? (totalSelected * 100.0) / totalApplied : 0.0;
+
+        return new ApplicationStatisticsResponseDTO(
+                totalApplied,
+                totalRejected,
+                totalInterviews,
+                totalSelected,
+                successRate
+        );
+
     }
 }
