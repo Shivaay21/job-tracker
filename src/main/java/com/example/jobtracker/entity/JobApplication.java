@@ -29,4 +29,8 @@ public class JobApplication {
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private Company company;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 }

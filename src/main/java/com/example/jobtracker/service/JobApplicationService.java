@@ -5,6 +5,7 @@ import com.example.jobtracker.dto.request.JobApplicationRequestDTO;
 import com.example.jobtracker.dto.response.ApplicationStatisticsResponseDTO;
 import com.example.jobtracker.dto.response.JobApplicationResponseDTO;
 import com.example.jobtracker.entity.ApplicationStatus;
+import com.example.jobtracker.entity.User;
 
 
 import java.time.LocalDateTime;
@@ -15,7 +16,6 @@ public interface JobApplicationService {
 
     JobApplicationResponseDTO getApplicationById(Long id);
 
-//    List<JobApplicationResponseDTO> getAllJobApplication();
     PagedResponseDTO<JobApplicationResponseDTO> getAllJobApplication(int page, int size, String sortBy, String sortDir);
 
     JobApplicationResponseDTO updateJobApplication(Long id, JobApplicationRequestDTO requestDTO);
@@ -29,5 +29,7 @@ public interface JobApplicationService {
     long countByStatus(ApplicationStatus status);
 
     ApplicationStatisticsResponseDTO getApplicationStatistics();
+
+    List<JobApplicationResponseDTO> getJobApplicationByUser(User currentUser);
 
 }

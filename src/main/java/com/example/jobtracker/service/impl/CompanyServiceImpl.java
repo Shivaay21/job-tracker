@@ -9,6 +9,7 @@ import com.example.jobtracker.exception.ResourceNotFoundException;
 import com.example.jobtracker.repository.CompanyRepository;
 import com.example.jobtracker.service.CompanyService;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional
 public class CompanyServiceImpl implements CompanyService {
@@ -32,17 +34,24 @@ public class CompanyServiceImpl implements CompanyService {
 
     @Override
     public CompanyResponseDTO createCompany(CompanyRequestDTO requestDTO){
+        log.info("Creating company with name: {}", requestDTO.getName());
         if(companyRepository.existsByName(requestDTO.getName())){
+            log.warn("Company already exists with name: {}", requestDTO.getName());
             throw new DuplicateResourceException("Company already exists with name " + requestDTO.getName());
         }
         Company company = modelMapper.map(requestDTO, Company.class);
         Company savedCompany = companyRepository.save(company);
+
+        log.info("Company created successfully with id {}",savedCompany.getId());
 
         return modelMapper.map(savedCompany, CompanyResponseDTO.class);
     }
 
     @Override
     public PagedResponseDTO<CompanyResponseDTO> getAllCompanies(int page, int size, String sortBy, String sortDir){
+        log.debug("Fetching companies - page: {}, size: {}, sortBy: {}, sortDir: {}",
+                page, size, sortBy, sortDir);
+
         Sort sort = sortDir.equalsIgnoreCase("desc")?
                 Sort.by(sortBy).descending():
                 Sort.by(sortBy).ascending();
@@ -66,28 +75,39 @@ public class CompanyServiceImpl implements CompanyService {
 
     @Override
     public CompanyResponseDTO getCompanyById(Long id){
-        Company company = companyRepository.findById(id).orElseThrow(()->
-                new ResourceNotFoundException("Company is not available for the given id "+id));
+        Company company = companyRepository.findById(id).orElseThrow(()-> {
+            log.warn("Company not found with id: {}", id);
+            return new ResourceNotFoundException("Company is not available for the given id "+id);
+        });
         return modelMapper.map(company, CompanyResponseDTO.class);
     }
 
     @Override
     public CompanyResponseDTO updateCompany(Long id, CompanyRequestDTO requestDTO){
-        Company existing = companyRepository.findById(id).orElseThrow(()->
-                new ResourceNotFoundException("Company is not available for the given id "+id));
+        log.info("Updating company with id: {}", id);
+        Company existing = companyRepository.findById(id).orElseThrow(()-> {
+            log.warn("Company not found for update with id: {}", id);
+            return new ResourceNotFoundException("Company is not available for the given id "+id);
+        });
+
         existing.setName(requestDTO.getName());
         existing.setLocation(requestDTO.getLocation());
         existing.setWebsite(requestDTO.getWebsite());
 
         Company updated = companyRepository.save(existing);
+        log.info("Company updated successfully with id {}",id);
+
         return modelMapper.map(updated, CompanyResponseDTO.class);
     }
 
     @Override
     public void deleteCompany(Long id){
-        Company company = companyRepository.findById(id).orElseThrow(()->
-                new ResourceNotFoundException("Company not found with id"+ id));
+        Company company = companyRepository.findById(id).orElseThrow(()-> {
+            log.warn("Company not found with id: {}", id);
+            return new ResourceNotFoundException("Company not found with id"+ id);
+        });
         companyRepository.delete(company);
+        log.info("Company deleted successfully with id: {}", id);
     }
 
     @Override
@@ -97,7 +117,9 @@ public class CompanyServiceImpl implements CompanyService {
             int size,
             String sortBy,
             String sortDir){
-        Sort sort = sortBy.equalsIgnoreCase("desc")?
+        log.debug("Searching companies by name: {}, page: {}, size: {}",
+                name, page, size);
+        Sort sort = sortDir.equalsIgnoreCase("desc")?
                 Sort.by(sortBy).descending():
                 Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(page, size, sort);

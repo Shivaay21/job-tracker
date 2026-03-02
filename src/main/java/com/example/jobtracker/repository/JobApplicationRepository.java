@@ -1,8 +1,8 @@
 package com.example.jobtracker.repository;
 
-import com.example.jobtracker.dto.response.JobApplicationResponseDTO;
 import com.example.jobtracker.entity.ApplicationStatus;
 import com.example.jobtracker.entity.JobApplication;
+import com.example.jobtracker.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
@@ -14,4 +14,6 @@ public interface JobApplicationRepository extends JpaRepository<JobApplication, 
     List<JobApplication> findByAppliedDateBetween(LocalDateTime start, LocalDateTime end);
 
     long countByStatus(ApplicationStatus status);
+
+    List<JobApplication> findByUser(User user);
 }
